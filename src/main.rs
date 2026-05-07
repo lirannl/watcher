@@ -1,13 +1,4 @@
-use std::{
-    collections::HashMap,
-    error::Error,
-    fmt::Display,
-    ops::Deref,
-    path::{Path, PathBuf, absolute},
-    process,
-    sync::{LazyLock, Mutex},
-    time::{Duration, Instant},
-};
+use std::{error::Error, fmt::Display, path::absolute, process, sync::LazyLock, time::Duration};
 
 #[derive(Debug)]
 pub struct StringError(String);
@@ -43,26 +34,6 @@ static ARGS: LazyLock<Args> = LazyLock::new(|| {
     }
     args
 });
-#[derive(Hash)]
-struct AbsolutePath(PathBuf);
-impl Deref for AbsolutePath {
-    type Target = PathBuf;
-    fn deref(&self) -> &Self::Target {
-        &self.0
-    }
-}
-impl PartialEq for AbsolutePath {
-    fn eq(&self, other: &Self) -> bool {
-        if let Ok(path) = absolute(&self.0)
-            && let Ok(other) = absolute(&other.0)
-        {
-            path == other
-        } else {
-            self.0 == other.0
-        }
-    }
-}
-impl Eq for AbsolutePath {}
 
 fn main() {
     let mut watcher = new_debouncer(
