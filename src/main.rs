@@ -4,6 +4,7 @@ use std::{
     fmt::Display,
     ops::Deref,
     path::{Path, PathBuf, absolute},
+    process,
     sync::{LazyLock, Mutex},
     time::{Duration, Instant},
 };
@@ -111,7 +112,24 @@ fn handle(event: DebouncedEvent) -> Result<(), Box<dyn Error>> {
         return Ok(());
     }
     {
-        println!("{:?} @ {:?}", event.kind, event.paths);
+        if let Some(command) = &ARGS.on_add
+            && event.kind.is_create()
+        {
+            println!("Executing {command} {path:?}");
+            let _ = process::Command::new(command).arg(path).spawn()?.wait()?;
+        } else if let Some(command) = &ARGS.on_modify
+            && event.kind.is_modify()
+        {
+            println!("Executing {command} {path:?}");
+            let _ = process::Command::new(command).arg(path).spawn()?.wait()?;
+        } else if let Some(command) = &ARGS.on_remove
+            && event.kind.is_remove()
+        {
+            println!("Executing {command} {path:?}");
+            let _ = process::Command::new(command).arg(path).spawn()?.wait()?;
+        } else {
+            println!("{:?} @ {:?}", event.kind, path);
+        }
     }
     Ok(())
 }
